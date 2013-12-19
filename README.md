@@ -4,6 +4,7 @@ SimpleImageLoader
 Load bitmap lib for android platform,see demo https://github.com/washpan/BitmapTool.git
 
 //1 init
+
 private BitmapLoader loader = null;
 private void initCache() {
 		int cacheSize = Math.round(Runtime.getRuntime().maxMemory() >> 12);
@@ -12,6 +13,7 @@ private void initCache() {
 	}
 
 //2. use
+
 loader.loadBitmap(
 						/**your url**/, new LoadBitmapListener() {
 
@@ -35,8 +37,9 @@ loader.loadBitmap(
 							}
 
 						});
-						
-	//3 .clean cache on destroy or pause
+
+//3 .clean cache on destroy or pause
+
 	if (null != loader) {
 			loader.cleanCache(false);
 		}

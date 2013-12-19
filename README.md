@@ -8,8 +8,7 @@ Load bitmap lib for android platform,see demo https://github.com/washpan/BitmapT
 private BitmapLoader loader = null;
 private void initCache() {
 		int cacheSize = Math.round(Runtime.getRuntime().maxMemory() >> 12);
-		loader = BitmapLoader.getInstance().init(cacheSize, STORE_PATH, getResources()
-				.getDisplayMetrics().widthPixels, 100);
+		loader = BitmapLoader.getInstance().init(cacheSize, STORE_PATH, /**your width**/, /**your height**/);
 	}
 
 //2. use

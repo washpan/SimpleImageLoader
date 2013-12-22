@@ -225,34 +225,39 @@ public class BitmapLoader {
 	 * */
 	public synchronized void loadBitmapJustLocalByWholePath(
 			final String imgFilePath, final LoadBitmapListener listener) {
-		// 停掉之前的任务
-		synchronized (views) {
-			LoadingTask oldTask = views.get(NameUtils.generateKey(imgFilePath));
-			if (null != oldTask && !oldTask.isWorking) {
-				oldTask.isStop = true;
-				synchronized (tasks) {
-					tasks.remove(oldTask);
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				// 停掉之前的任务
+				synchronized (views) {
+					LoadingTask oldTask = views.get(NameUtils.generateKey(imgFilePath));
+					if (null != oldTask && !oldTask.isWorking) {
+						oldTask.isStop = true;
+						synchronized (tasks) {
+							tasks.remove(oldTask);
+						}
+					}
+					views.remove(NameUtils.generateKey(imgFilePath));
 				}
+				SafeBitmap safeBitmap = loadLocal(imgFilePath, cache,
+						URI_TYPE_FILE_PATH);
+				if (null != safeBitmap && null != safeBitmap.bitmap
+						&& null != safeBitmap.bitmap.get()) {
+					// 放入缓存中
+					synchronized (cache) {
+						cache.put(NameUtils.generateKey(imgFilePath), safeBitmap);
+					}
+					if (null != listener) {
+						listener.onFinish(safeBitmap);
+					}
+				} else {
+					if (null != listener) {
+						listener.onError();
+					}
+				}				
 			}
-			views.remove(NameUtils.generateKey(imgFilePath));
-		}
-		SafeBitmap safeBitmap = loadLocal(imgFilePath, cache,
-				URI_TYPE_FILE_PATH);
-		if (null != safeBitmap && null != safeBitmap.bitmap
-				&& null != safeBitmap.bitmap.get()) {
-			// 放入缓存中
-			synchronized (cache) {
-				cache.put(NameUtils.generateKey(imgFilePath), safeBitmap);
-			}
-			if (null != listener) {
-				listener.onFinish(safeBitmap);
-			}
-		} else {
-			if (null != listener) {
-				listener.onError();
-			}
-		}
-
+		}).start();
 	}
 
 	/**
@@ -263,34 +268,39 @@ public class BitmapLoader {
 	 * */
 	public synchronized void loadBitmapJustLocalByName(
 			final String imgFileName, final LoadBitmapListener listener) {
-		// 停掉之前的任务
-		synchronized (views) {
-			LoadingTask oldTask = views.get(NameUtils.generateKey(imgFileName));
-			if (null != oldTask && !oldTask.isWorking) {
-				oldTask.isStop = true;
-				synchronized (tasks) {
-					tasks.remove(oldTask);
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				// 停掉之前的任务
+				synchronized (views) {
+					LoadingTask oldTask = views.get(NameUtils.generateKey(imgFileName));
+					if (null != oldTask && !oldTask.isWorking) {
+						oldTask.isStop = true;
+						synchronized (tasks) {
+							tasks.remove(oldTask);
+						}
+					}
+					views.remove(NameUtils.generateKey(imgFileName));
+				}
+				SafeBitmap safeBitmap = loadLocal(imgFileName, cache,
+						URI_TYPE_FILE_NAME);
+				if (null != safeBitmap && null != safeBitmap.bitmap
+						&& null != safeBitmap.bitmap.get()) {
+					// 放入缓存中
+					synchronized (cache) {
+						cache.put(NameUtils.generateKey(imgFileName), safeBitmap);
+					}
+					if (null != listener) {
+						listener.onFinish(safeBitmap);
+					}
+				} else {
+					if (null != listener) {
+						listener.onError();
+					}
 				}
 			}
-			views.remove(NameUtils.generateKey(imgFileName));
-		}
-		SafeBitmap safeBitmap = loadLocal(imgFileName, cache,
-				URI_TYPE_FILE_NAME);
-		if (null != safeBitmap && null != safeBitmap.bitmap
-				&& null != safeBitmap.bitmap.get()) {
-			// 放入缓存中
-			synchronized (cache) {
-				cache.put(NameUtils.generateKey(imgFileName), safeBitmap);
-			}
-			if (null != listener) {
-				listener.onFinish(safeBitmap);
-			}
-		} else {
-			if (null != listener) {
-				listener.onError();
-			}
-		}
-
+		}).start();
 	}
 
 	/**
@@ -303,43 +313,48 @@ public class BitmapLoader {
 	 * */
 	public synchronized void loadBitmap(final String netUrl,
 			final LoadBitmapListener listener) {
-		// 停掉之前的任务
-		synchronized (views) {
-			LoadingTask oldTask = views.get(NameUtils.generateKey(netUrl));
-			if (null != oldTask && !oldTask.isWorking) {
-				oldTask.isStop = true;
-				synchronized (tasks) {
-					tasks.remove(oldTask);
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				// 停掉之前的任务
+				synchronized (views) {
+					LoadingTask oldTask = views.get(NameUtils.generateKey(netUrl));
+					if (null != oldTask && !oldTask.isWorking) {
+						oldTask.isStop = true;
+						synchronized (tasks) {
+							tasks.remove(oldTask);
+						}
+					}
+					views.remove(NameUtils.generateKey(netUrl));
+				}
+				SafeBitmap safeBitmap = loadLocal(netUrl, cache, URI_TYPE_URL);
+				if (null != safeBitmap && null != safeBitmap.bitmap
+						&& null != safeBitmap.bitmap.get()) {
+					// 放入缓存中
+					synchronized (cache) {
+						cache.put(NameUtils.generateKey(netUrl), safeBitmap);
+					}
+					if (null != listener) {
+						listener.onFinish(safeBitmap);
+					}
+					return;
+				}
+				LoadingTask task = new LoadingTask(netUrl,
+						NameUtils.generateKey(netUrl), listener);
+				synchronized (views) {
+					views.put(NameUtils.generateKey(netUrl), task);
+				}
+				try {
+					tasks.put(task);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					if (null != listener) {
+						listener.onError();
+					}
 				}
 			}
-			views.remove(NameUtils.generateKey(netUrl));
-		}
-		SafeBitmap safeBitmap = loadLocal(netUrl, cache, URI_TYPE_URL);
-		if (null != safeBitmap && null != safeBitmap.bitmap
-				&& null != safeBitmap.bitmap.get()) {
-			// 放入缓存中
-			synchronized (cache) {
-				cache.put(NameUtils.generateKey(netUrl), safeBitmap);
-			}
-			if (null != listener) {
-				listener.onFinish(safeBitmap);
-			}
-			return;
-		}
-		LoadingTask task = new LoadingTask(netUrl,
-				NameUtils.generateKey(netUrl), listener);
-		synchronized (views) {
-			views.put(NameUtils.generateKey(netUrl), task);
-		}
-		try {
-			tasks.put(task);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-			if (null != listener) {
-				listener.onError();
-			}
-		}
-
+		}).start();
 	}
 
 	/**

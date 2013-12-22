@@ -442,7 +442,7 @@ public class BitmapLoader {
 			tasks.clear();
 		}
 		System.gc();
-		SystemClock.sleep(2000);
+//		SystemClock.sleep(2000);
 		// 重新初始化
 		initCache(cacheSize);
 	}
